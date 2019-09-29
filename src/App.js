@@ -7,20 +7,14 @@ import Box from '@material-ui/core/Box';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Test from './test';
-import { LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import Http from './http.service';
 let tmp = process.env.REACT_APP_RESAS_KEY;
-const data = [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}];
-const renderLineChart = (
-  <LineChart width={400} height={400} data={data}>
-    <Line type="monotone" dataKey="uv" stroke="#8884d8" />
-  </LineChart>
-);
 
 class App extends Component {
   constructor() {
     super()
-    this.state = {prefectures: []};
+    this.state = {prefectures: [], graphData: []};
     (() => {
       Http.send('getPrefectures', {}, {})
       .then((res) => {
@@ -31,40 +25,24 @@ class App extends Component {
         console.log(err)
       })
     })()
+    this.setGraphData()
+  }
+  setGraphData() {
+    this.setState({graphData: [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}, {name: 'Page A', uv: 500, pv: 2500, amt: 2500}]})
   }
   render() {
     return(
       <div className="App">
         <header className="App-header">
-          <Box
-            m={5}
-          >
+          <Box m={5} >
             <Prefecture prefectures={this.state.prefectures}/>
           </Box>
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          <p>
-            {tmp}
-          </p>
-          <p>
-            {this.state.hoge}
-          </p>
-          <Button variant="contained" color="primary">
-            Hello World
-          </Button>
           <Graph />
-          <div>
-            {renderLineChart}
-          </div>
+          {/* <div>
+            <LineChart width={400} height={400} data={this.state.graphData}>
+              <Line type="monotone" dataKey="uv" stroke="#8884d8" />
+            </LineChart>
+          </div> */}
         </header>
       </div>
     );
@@ -82,10 +60,11 @@ class Prefecture extends Component {
         {this.props.prefectures.map((prefecture, index) => (
           <FormControlLabel
            label={prefecture.prefName}
+           key={prefecture.prefCode}
            control={
             <Checkbox
              value="tmp"
-              inputProps={{ 'aria-label': 'Checkbox A' }}
+              inputProps={{ 'aria-label': 'Checkbox' + prefecture.prefCode }}
             />
            }
           >
@@ -96,11 +75,50 @@ class Prefecture extends Component {
   }
 }
 class Graph extends Component {
+  constructor() {
+    super()
+    this.state = {graphData: [
+      {
+        name: 'Page A', uv: 4000, pv: 2400, amt: 2400,
+      },
+      {
+        name: 'Page B', uv: 3000, pv: 1398, amt: 2210,
+      },
+      {
+        name: 'Page C', uv: 2000, pv: 9800, amt: 2290,
+      },
+      {
+        name: 'Page D', uv: 2780, pv: 3908, amt: 2000,
+      },
+      {
+        name: 'Page E', uv: 1890, pv: 4800, amt: 2181,
+      },
+      {
+        name: 'Page F', uv: 2390, pv: 3800, amt: 2500,
+      },
+      {
+        name: 'Page G', uv: 3490, pv: 4300, amt: 2100,
+      },
+    ]};
+  }
   render() {
     return (
-      <div>
-        hoge
-      </div>
+      <LineChart
+        width={500}
+        height={300}
+        data={this.state.graphData}
+        margin={{
+          top: 5, right: 30, left: 20, bottom: 5,
+        }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
+        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+      </LineChart>
     )
   }
 
