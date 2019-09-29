@@ -14,9 +14,9 @@ let tmp = process.env.REACT_APP_RESAS_KEY;
 class App extends Component {
   constructor() {
     super()
-    this.state = {prefectures: [], graphData: []};
+    this.state = {prefectures: [], selectedPrefectures: [], graphData: []};
     (() => {
-      Http.send('getPrefectures', {}, {})
+      Http.send('getPrefectures', {}, null)
       .then((res) => {
         if (!res.result) return Promise.reject()
         this.setState({prefectures: res.result})
@@ -26,6 +26,17 @@ class App extends Component {
       })
     })()
     this.setGraphData()
+    this.getPopulation(13)
+  }
+  getPopulation (prefCode) {
+    Http.send('getPopulation', {}, {prefCode, cityCode: '-'})
+    .then((res) => {
+      if (!res.result) return Promise.reject()
+      console.log(res)
+    })
+    .catch((err) => {
+      console.log(err)
+    })
   }
   setGraphData() {
     this.setState({graphData: [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}, {name: 'Page A', uv: 500, pv: 2500, amt: 2500}]})

@@ -19,7 +19,14 @@ export default {
     }
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
-      xhr.open(apis[api].method, baseUrl + apis[api].path, true);
+      let paramStr = ''
+      if (param) {
+        paramStr = '?'
+        for(let k in param) {
+          paramStr = paramStr + k + '=' + param[k] + '&'
+        }
+      }
+      xhr.open(apis[api].method, baseUrl + apis[api].path + paramStr, true);
       xhr.setRequestHeader("Content-Type", "application/json");
       xhr.setRequestHeader("X-API-KEY", process.env.REACT_APP_RESAS_KEY);
       xhr.onload = () => {
