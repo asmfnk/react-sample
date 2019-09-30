@@ -26,13 +26,14 @@ class App extends Component {
       })
     })()
     this.setGraphData()
-    this.getPopulation(13)
   }
   getPopulation (prefCode) {
     Http.send('getPopulation', {}, {prefCode, cityCode: '-'})
     .then((res) => {
       if (!res.result) return Promise.reject()
-      console.log(res)
+      const data = this.state.graphData
+      data.push({prefCode, data: res.result.data[0].data})
+      this.setState({graphData: data})
     })
     .catch((err) => {
       console.log(err)
@@ -41,12 +42,20 @@ class App extends Component {
   setGraphData() {
     this.setState({graphData: [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}, {name: 'Page A', uv: 500, pv: 2500, amt: 2500}]})
   }
+  prefChange(e) {
+    if (e.value) {
+      this.getPopulation(e.prefCode)
+    } else {
+      const data = this.state.graphData
+      this.setState({graphData: data.filter(d => d.prefCode !== e.prefCode)})
+    }
+  }
   render() {
     return(
       <div className="App">
         <header className="App-header">
           <Box m={5} >
-            <Prefecture prefectures={this.state.prefectures}/>
+            <Prefecture prefectures={this.state.prefectures} onEventCallBack={this.prefChange.bind(this)}/>
           </Box>
           <Graph />
           {/* <div>
@@ -64,8 +73,10 @@ class Prefecture extends Component {
   constructor(props) {
     super(props);
   }
+  onCheckboxChange(e) {
+    this.props.onEventCallBack({prefCode: Number(e.target.value), value: e.target.checked })
+  }
   render() {
-    
     return (<div>
       <FormGroup row>
         {this.props.prefectures.map((prefecture, index) => (
@@ -74,8 +85,9 @@ class Prefecture extends Component {
            key={prefecture.prefCode}
            control={
             <Checkbox
-             value="tmp"
+              value={prefecture.prefCode}
               inputProps={{ 'aria-label': 'Checkbox' + prefecture.prefCode }}
+              onChange={this.onCheckboxChange.bind(this)}
             />
            }
           >
