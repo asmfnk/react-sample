@@ -14,7 +14,7 @@ let tmp = process.env.REACT_APP_RESAS_KEY;
 class App extends Component {
   constructor() {
     super()
-    this.state = {prefectures: [], selectedPrefectures: [], graphData: []};
+    this.state = {prefectures: [], selectedPrefectures: [], populationData: [], graphData: []};
     (() => {
       Http.send('getPrefectures', {}, null)
       .then((res) => {
@@ -25,30 +25,42 @@ class App extends Component {
         console.log(err)
       })
     })()
-    this.setGraphData()
   }
-  getPopulation (prefCode) {
-    Http.send('getPopulation', {}, {prefCode, cityCode: '-'})
+  getPopulation (prefCode, prefName) {
+    return Http.send('getPopulation', {}, {prefCode, cityCode: '-'})
     .then((res) => {
       if (!res.result) return Promise.reject()
-      const data = this.state.graphData
-      data.push({prefCode, data: res.result.data[0].data})
-      this.setState({graphData: data})
+      const data = this.state.populationData
+      data.push({prefCode, prefName, data: res.result.data[0].data, color: randomColor()})
+      this.setState({populationData: data})
     })
     .catch((err) => {
       console.log(err)
     })
   }
-  setGraphData() {
-    this.setState({graphData: [{name: 'Page A', uv: 400, pv: 2400, amt: 2400}, {name: 'Page A', uv: 500, pv: 2500, amt: 2500}]})
+  makeGraphData() {
+    const data = []
+    this.state.populationData.map(prefData => {
+      prefData.data.map(d => {
+        let year = data.find(y => y.year === d.year)
+        if (!year) {
+          data.push({year: d.year, [prefData.prefCode]: d.value})
+        } else {
+          year[prefData.prefCode] = d.value
+        }
+      })
+    })
+    console.log(data)
+    this.setState({graphData: data})
   }
-  prefChange(e) {
+  async prefChange(e) {
     if (e.value) {
-      this.getPopulation(e.prefCode)
+      let res = await this.getPopulation(e.prefCode, e.prefName);
     } else {
-      const data = this.state.graphData
-      this.setState({graphData: data.filter(d => d.prefCode !== e.prefCode)})
+      const data = this.state.populationData
+      this.setState({populationData: data.filter(d => d.prefCode !== e.prefCode)})
     }
+    this.makeGraphData()
   }
   render() {
     return(
@@ -57,12 +69,7 @@ class App extends Component {
           <Box m={5} >
             <Prefecture prefectures={this.state.prefectures} onEventCallBack={this.prefChange.bind(this)}/>
           </Box>
-          <Graph />
-          {/* <div>
-            <LineChart width={400} height={400} data={this.state.graphData}>
-              <Line type="monotone" dataKey="uv" stroke="#8884d8" />
-            </LineChart>
-          </div> */}
+          <Graph graphData={this.state.graphData} populationData={this.state.populationData} />
         </header>
       </div>
     );
@@ -74,7 +81,7 @@ class Prefecture extends Component {
     super(props);
   }
   onCheckboxChange(e) {
-    this.props.onEventCallBack({prefCode: Number(e.target.value), value: e.target.checked })
+    this.props.onEventCallBack({prefCode: Number(e.target.value.split('+')[1]), prefName: e.target.value.split('+')[0], value: e.target.checked })
   }
   render() {
     return (<div>
@@ -85,7 +92,8 @@ class Prefecture extends Component {
            key={prefecture.prefCode}
            control={
             <Checkbox
-              value={prefecture.prefCode}
+              color="primary"
+              value={prefecture.prefName + '+' + prefecture.prefCode}
               inputProps={{ 'aria-label': 'Checkbox' + prefecture.prefCode }}
               onChange={this.onCheckboxChange.bind(this)}
             />
@@ -100,51 +108,46 @@ class Prefecture extends Component {
 class Graph extends Component {
   constructor() {
     super()
-    this.state = {graphData: [
-      {
-        name: 'Page A', uv: 4000, pv: 2400, amt: 2400,
-      },
-      {
-        name: 'Page B', uv: 3000, pv: 1398, amt: 2210,
-      },
-      {
-        name: 'Page C', uv: 2000, pv: 9800, amt: 2290,
-      },
-      {
-        name: 'Page D', uv: 2780, pv: 3908, amt: 2000,
-      },
-      {
-        name: 'Page E', uv: 1890, pv: 4800, amt: 2181,
-      },
-      {
-        name: 'Page F', uv: 2390, pv: 3800, amt: 2500,
-      },
-      {
-        name: 'Page G', uv: 3490, pv: 4300, amt: 2100,
-      },
-    ]};
+  }
+  getPrefName(code) {
+    const pref = this.props.populationData.find(e => e.prefCode === code)
+    return !pref ? '' : pref.prefName
   }
   render() {
     return (
       <LineChart
-        width={500}
-        height={300}
-        data={this.state.graphData}
+        width={800}
+        height={400}
+        data={this.props.graphData}
         margin={{
           top: 5, right: 30, left: 20, bottom: 5,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
+        <XAxis tick={{fontSize: 15}} dataKey="year" />
+        <YAxis tick={{fontSize: 15}}/>
         <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="pv" stroke="#8884d8" activeDot={{ r: 8 }} />
-        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
+        <Legend tick={{fontSize: 15}}/>
+        {!this.props.populationData ? null : this.props.populationData.map(d => {
+          return (
+            <Line 
+              type="monotone"
+              key={d.prefCode}
+              name={this.getPrefName(d.prefCode)}
+              dataKey={d.prefCode} stroke={d.color} activeDot={{ r: 8 }} />
+          )
+        })}
       </LineChart>
     )
   }
+}
 
+function randomColor() {
+  var randomColor = "#";
+  for(var i = 0; i < 6; i++) {
+      randomColor += (16*Math.random() | 0).toString(16);
+  }
+  return randomColor
 }
 
 export default App;
