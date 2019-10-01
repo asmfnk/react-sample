@@ -1,15 +1,11 @@
 import React, {Component} from 'react';
-import logo from './logo.svg';
 import './App.css';
-import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import Box from '@material-ui/core/Box';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Test from './test';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import Http from './http.service';
-let tmp = process.env.REACT_APP_RESAS_KEY;
 
 class App extends Component {
   constructor() {
@@ -50,7 +46,6 @@ class App extends Component {
         }
       })
     })
-    console.log(data)
     this.setState({graphData: data})
   }
   async prefChange(e) {
