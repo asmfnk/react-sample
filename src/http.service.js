@@ -7,10 +7,10 @@ const apis = {
   // 謎一覧を取得
   getPopulation: {
     method: 'GET',
-    path: '/population/composition/perYear'
+    path: '/population'
   }
 }
-const baseUrl = 'https://opendata.resas-portal.go.jp/api/v1'
+const baseUrl = '/api'
 
 export default {
   send: (api, data, param) => {
@@ -28,7 +28,7 @@ export default {
       }
       xhr.open(apis[api].method, baseUrl + apis[api].path + paramStr, true);
       xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.setRequestHeader("X-API-KEY", process.env.REACT_APP_RESAS_KEY);
+      // xhr.setRequestHeader("X-API-KEY", process.env.REACT_APP_RESAS_KEY);
       xhr.onload = () => {
         if (xhr.readyState === 4 && xhr.status === 200) {
           resolve(JSON.parse(xhr.response));
