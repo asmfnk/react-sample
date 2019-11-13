@@ -1,6 +1,7 @@
 ## RESAS(地域経済分析システム)の人口データを可視化する
 https://react-resas.firebaseapp.com/
 でホスティング中
+→無料プランでないので停止中
 
 ## Available Scripts
 
